@@ -5,7 +5,26 @@ per the released project statement: given a single RGB image, produce a stack of
 layers with (a) semantic grouping, (b) depth order (near→far), and (c) an optional
 per-layer intrinsic albedo/shading split.
 
-See [`report/report.md`](report/report.md) for the literature review, method, benchmarking, and results.
+See [`report/report.md`](report/report.md) for the full literature review, method, benchmarking, and results.
+
+## Results at a glance
+
+Benchmarked on four images (person, cat, cluttered still life, vehicle) with two
+segmentation backbones. Full table, figures, and discussion in the report; short version:
+
+| Image | Mask R-CNN (instance) layers | DeepLabV3 (semantic) layers |
+|---|---|---|
+| astronaut | 2 (person, background) | 2 (person, background) |
+| chelsea (cat) | 2 (animal, background) | 2 (animal, background) |
+| coffee (still life) | **5** (cup, 2× spoon, table, background) | 2 (table, background only — VOC has no cup/spoon class) |
+| motorcycle | 5 (vehicle + 2 spurious detections) | 3 (clean, no spurious detections) |
+
+**Finding**: no unconditional winner — Mask R-CNN is more complete (larger vocabulary,
+separates instances) but occasionally noisier (spurious low-confidence detections);
+DeepLabV3 is cleaner but bounded by VOC's 20-class vocabulary. A parallax preview
+([`src/parallax.py`](src/parallax.py)) also measures a 3.4%–8.4% disocclusion-hole rate
+when layers are shifted for animation — the concrete reason a production version would
+need learned inpainting (see report Sections 4–6).
 
 ## Approach
 

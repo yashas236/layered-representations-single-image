@@ -156,6 +156,34 @@ but also cannot separate the two real vehicle-adjacent objects the way an instan
 could. This is a genuine, visible precision/recall tradeoff between the two backbones, not
 a hypothetical one.
 
+### 4.2 Parallax preview: making the "no occlusion inpainting" limitation visible, not just claimed
+
+The project statement's motivation explicitly names **animation (parallax)** as a use
+case. To test the layer stack against that use case directly (not just reconstruct the
+original viewpoint), [`src/parallax.py`](../src/parallax.py) shifts each Mask R-CNN layer
+horizontally in proportion to its MiDaS disparity (nearer layers move more — a simple
+simulated camera translation) and recomposites:
+
+| Image | Disocclusion hole fraction after parallax shift |
+|---|---|
+| astronaut | 7.3% |
+| chelsea | 8.4% |
+| coffee | 3.4% |
+| motorcycle | 5.9% |
+
+![Astronaut parallax holes (magenta = disocclusion)](../outputs/instance_maskrcnn/astronaut_parallax_holes.png)
+
+The magenta overlay marks pixels no layer covers after shifting — i.e., background that
+was occluded by a foreground object in the original photo and is never captured anywhere
+in the layer stack. On the astronaut image, the hole traces the *exact silhouette* of where
+the astronaut was before her `people` layer shifted right, exposing the flag/shuttle
+background behind her that this project's layers simply do not contain. This is the direct,
+visual reason **3D Photo Inpainting** (Section 2) adds a learned inpainting step at exactly
+these disocclusion boundaries: without it, any real parallax animation from this project's
+layer stack would show these holes. Reporting a **non-zero hole fraction for all four
+benchmark images** (3.4%–8.4%) turns Section 6's inpainting limitation from an assumption
+into a measured result.
+
 ## 5. Discussion
 
 **The two backbones tie on simple, single-dominant-object images** (astronaut, chelsea):
@@ -222,8 +250,9 @@ winner**, only a precision/recall and vocabulary-coverage tradeoff:
 - **No occlusion inpainting**: pixels behind a foreground object are simply absent (alpha=0)
   in the layers behind it — unlike 3D Photo Inpainting's LDI, which inpaints these
   disoccluded regions so a layer can be viewed from a shifted viewpoint without holes. This
-  project's recomposite benchmark only tests reconstruction at the *original* viewpoint, not
-  at a shifted (parallax) viewpoint, for exactly this reason.
+  is not just a theoretical concern here: Section 4.2's parallax preview measures a 3.4%–8.4%
+  disocclusion hole fraction across the four benchmark images once layers are actually shifted
+  for animation, which is exactly the failure mode a learned inpainting step would fix.
 - **Intrinsic split is classical, not learned**: the Retinex-style heuristic in
   `intrinsic.py` is a fast, interpretable approximation, not a trained
   intrinsic-decomposition network, and will fail on strong textures whose high frequency

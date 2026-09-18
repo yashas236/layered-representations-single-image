@@ -48,6 +48,7 @@ src/
   depth.py          MiDaS monocular depth estimator
   layers.py         Builds depth-ordered RGBA layers from masks + a depth map, and re-composites them
   intrinsic.py       Classical albedo/shading split (stretch goal)
+  parallax.py        Shifts layers by depth to preview parallax animation, exposing disocclusion holes
   pipeline.py        End-to-end single-image pipeline + CLI
   benchmark.py       Runs the pipeline over sample images x both segmentation backbones
   visualize.py       Per-image grid figure (input, depth, layers, recomposite)

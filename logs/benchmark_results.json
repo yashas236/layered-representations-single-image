@@ -12,7 +12,8 @@
       "background"
     ],
     "psnr": Infinity,
-    "ssim": 1.0
+    "ssim": 1.0,
+    "parallax_hole_fraction": 0.07294845581054688
   },
   {
     "image": "astronaut",
@@ -42,7 +43,8 @@
       "background"
     ],
     "psnr": Infinity,
-    "ssim": 1.0
+    "ssim": 1.0,
+    "parallax_hole_fraction": 0.08429416112342941
   },
   {
     "image": "chelsea",
@@ -78,7 +80,8 @@
       "background"
     ],
     "psnr": Infinity,
-    "ssim": 1.0
+    "ssim": 1.0,
+    "parallax_hole_fraction": 0.03394166666666667
   },
   {
     "image": "coffee",
@@ -114,7 +117,8 @@
       "refrigerator"
     ],
     "psnr": Infinity,
-    "ssim": 1.0
+    "ssim": 1.0,
+    "parallax_hole_fraction": 0.05906612685560054
   },
   {
     "image": "motorcycle",

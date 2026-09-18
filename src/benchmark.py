@@ -11,6 +11,7 @@ from PIL import Image
 from skimage import data as skdata
 
 from depth import DepthEstimator
+from parallax import render_parallax
 from pipeline import get_device, run_on_image
 from segmentation import InstanceSegmenter, SemanticSegmenter
 from visualize import make_figure
@@ -56,6 +57,16 @@ def main():
                 "groups": res["groups"], "classes": res["classes"],
                 "psnr": res["psnr"], "ssim": res["ssim"],
             })
+
+            if backend_name == "instance_maskrcnn":
+                shifted, holes = render_parallax(res["layers"], image.shape)
+                hole_frac = float(holes.mean())
+                Image.fromarray(shifted).save(f"{out_dir}/{name}_parallax_shifted.png")
+                overlay = shifted.copy()
+                overlay[holes] = [255, 0, 255]  # magenta = disocclusion hole (no captured pixel)
+                Image.fromarray(overlay).save(f"{out_dir}/{name}_parallax_holes.png")
+                results[-1]["parallax_hole_fraction"] = hole_frac
+                print(f"    parallax preview: {hole_frac*100:.1f}% of pixels are disocclusion holes")
 
     os.makedirs("../logs", exist_ok=True)
     with open("../logs/benchmark_results.json", "w") as f:

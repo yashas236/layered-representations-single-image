@@ -94,5 +94,43 @@
     ],
     "psnr": Infinity,
     "ssim": 1.0
+  },
+  {
+    "image": "motorcycle",
+    "backend": "instance_maskrcnn",
+    "n_layers": 5,
+    "groups": [
+      "vehicles",
+      "background",
+      "vehicles",
+      "vehicles",
+      "other"
+    ],
+    "classes": [
+      "motorcycle",
+      "background",
+      "motorcycle",
+      "bicycle",
+      "refrigerator"
+    ],
+    "psnr": Infinity,
+    "ssim": 1.0
+  },
+  {
+    "image": "motorcycle",
+    "backend": "semantic_deeplabv3",
+    "n_layers": 3,
+    "groups": [
+      "vehicles",
+      "background",
+      "vehicles"
+    ],
+    "classes": [
+      "motorbike",
+      "background",
+      "bicycle"
+    ],
+    "psnr": Infinity,
+    "ssim": 1.0
   }
 ]

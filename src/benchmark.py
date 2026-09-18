@@ -23,7 +23,7 @@ def load_sample_images():
         "coffee": skdata.coffee(),         # mug / table (furniture-ish still life)
     }
     try:
-        left, _ = skdata.stereo_motorcycle()
+        left, _, _ = skdata.stereo_motorcycle()
         samples["motorcycle"] = left[..., :3]
     except Exception:
         pass

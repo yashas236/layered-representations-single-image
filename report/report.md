@@ -106,8 +106,9 @@ literature (e.g., reconstruction loss in Omnimatte, LDI-based view synthesis).
 
 ## 4. Benchmarking Results
 
-Both backbones were run on the same three natural images (bundled with `scikit-image`, so
-the benchmark needs no dataset download), each also passed through MiDaS for depth
+Both backbones were run on the same four natural images (bundled with `scikit-image`, so
+the benchmark needs no dataset download — one per requested semantic group: person,
+animal, a cluttered still life, and a vehicle), each also passed through MiDaS for depth
 ordering and through the recompositing check:
 
 | Image | Backend | # Layers | Groups detected | Recon PSNR | Recon SSIM |
@@ -118,6 +119,8 @@ ordering and through the recompositing check:
 | chelsea (cat) | DeepLabV3 (semantic) | 2 | animals, background | inf | 1.0000 |
 | coffee (still life) | Mask R-CNN (instance) | **5** | background, furniture, other (cup, 2× spoon) | inf | 1.0000 |
 | coffee (still life) | DeepLabV3 (semantic) | **2** | background, other (table only) | inf | 1.0000 |
+| motorcycle (vehicle) | Mask R-CNN (instance) | **5** | background, vehicles ×3, other (1 spurious "refrigerator") | inf | 1.0000 |
+| motorcycle (vehicle) | DeepLabV3 (semantic) | **3** | background, vehicles ×2 | inf | 1.0000 |
 
 **Reconstruction PSNR/SSIM is inf/1.0 for every run, by construction, for both backbones**:
 every pixel is claimed by exactly one layer (instances first, everything else falls into
@@ -135,36 +138,61 @@ that *does* discriminate them here: layer count and semantic completeness.
 ![Chelsea (cat) — DeepLabV3](../figures/chelsea_semantic_deeplabv3.png)
 ![Coffee — Mask R-CNN](../figures/coffee_instance_maskrcnn.png)
 ![Coffee — DeepLabV3](../figures/coffee_semantic_deeplabv3.png)
+![Motorcycle — Mask R-CNN](../figures/motorcycle_instance_maskrcnn.png)
+![Motorcycle — DeepLabV3](../figures/motorcycle_semantic_deeplabv3.png)
 
-The coffee figure (Mask R-CNN) is the most informative: it correctly separates cup and
-both spoons as distinct near-field layers, the table as a mid/far layer, and orders them
-by MiDaS disparity consistent with the actual scene geometry (spoon and cup resting on/near
-the table, closer to the camera than the table's far edge).
+The coffee figure (Mask R-CNN) is the most informative success case: it correctly
+separates cup and both spoons as distinct near-field layers, the table as a mid/far layer,
+and orders them by MiDaS disparity consistent with the actual scene geometry (spoon and cup
+resting on/near the table, closer to the camera than the table's far edge).
+
+The motorcycle figure (Mask R-CNN) is the most informative *failure* case: alongside a
+clean, correctly-foregrounded `vehicles/motorcycle` layer, it also emits two spurious
+low-confidence detections on the same small dark region near the motorcycle's seat
+(labelled `vehicles/motorcycle` again, and separately `vehicles/bicycle`) and one
+misclassified background object (a small box on a shelf, labelled `other/refrigerator`).
+DeepLabV3 on the same image produces a cleaner 3-layer result with no spurious detections,
+but also cannot separate the two real vehicle-adjacent objects the way an instance model
+could. This is a genuine, visible precision/recall tradeoff between the two backbones, not
+a hypothetical one.
 
 ## 5. Discussion
 
 **The two backbones tie on simple, single-dominant-object images** (astronaut, chelsea):
 both correctly find one foreground instance/class plus background, because there is only
 one salient object and it happens to be in both COCO's and VOC's vocabularies (`person`,
-`cat`). **They diverge sharply on the cluttered still-life image**: Mask R-CNN produces 5
-semantically distinct, correctly depth-ordered layers (cup, two spoons, table, background),
-while DeepLabV3 collapses everything except the table into `background`, because **VOC's
-20-class vocabulary simply has no `cup` or `spoon` category** — DeepLabV3 is not "wrong" in
-a modeling sense, it was never trained to recognize these objects at all. This is the
-project's central, genuinely benchmarked finding:
+`cat`). **They diverge sharply on the two cluttered images (coffee, motorcycle)**, in two
+different, complementary directions:
 
-- **Instance segmentation (Mask R-CNN) is the better default for this layering task**
-  whenever a scene has multiple distinct objects, because (a) it separates same-class
-  instances into independent, independently-orderable layers (matters for e.g. two people
-  at different depths — DeepLabV3 would merge them into one `person` layer with one
-  averaged depth), and (b) in this comparison it also happened to use the larger COCO
-  vocabulary (80 vs. 20 classes), so it recognized objects DeepLabV3's VOC training simply
-  never covered.
+- **On the coffee still life, Mask R-CNN is strictly more complete**: it produces 5
+  semantically distinct, correctly depth-ordered layers (cup, two spoons, table,
+  background), while DeepLabV3 collapses everything except the table into `background`,
+  because **VOC's 20-class vocabulary simply has no `cup` or `spoon` category** — DeepLabV3
+  is not "wrong" in a modeling sense here, it was never trained to recognize these objects
+  at all.
+- **On the motorcycle image, Mask R-CNN is more complete *and* noisier**: it correctly
+  separates the motorcycle, but also emits two spurious low-confidence detections on the
+  same small dark region (a duplicate `motorcycle` and a `bicycle` label on what is most
+  likely a helmet) plus one misclassified background object (`refrigerator` on a small box).
+  DeepLabV3 produces a cleaner, spurious-free result on the same image, at the cost of
+  merging distinct objects together and, again, not seeing anything outside VOC's 20 classes.
+
+This is the project's central, genuinely benchmarked finding — **there is no unconditional
+winner**, only a precision/recall and vocabulary-coverage tradeoff:
+
+- **Instance segmentation (Mask R-CNN) trades precision for completeness**: it separates
+  same-class instances into independent, independently-orderable layers (matters for e.g.
+  two people at different depths — DeepLabV3 would merge them into one `person` layer with
+  one averaged depth) and uses a larger vocabulary (COCO's 80 classes vs. VOC's 20), but at
+  a real, observed cost of occasional spurious/duplicate low-confidence detections that a
+  production layering tool would need to filter (e.g. a higher score threshold, or
+  non-maximum suppression across classes rather than only within a class).
 - **Semantic segmentation (DeepLabV3) is not obsolete for this task** — it is faster
-  (single forward pass, no per-instance mask head) and gives a complete label for *every*
+  (single forward pass, no per-instance mask head), was not observed to produce a single
+  spurious layer across all four benchmark images, and gives a complete label for *every*
   pixel in its vocabulary, including "stuff" classes (sky, road) that instance segmentation
   does not model at all and that matter for background layering in outdoor scenes.
-- The **recomposite PSNR/SSIM=inf/1.0 result across all six runs** is itself a useful
+- The **recomposite PSNR/SSIM=inf/1.0 result across all eight runs** is itself a useful
   negative result to report honestly: it demonstrates the *compositing implementation* is
   correct, but is uninformative for comparing segmentation quality, because both pipelines'
   `background` catch-all layer guarantees full coverage regardless of how good the instance
@@ -204,10 +232,11 @@ project's central, genuinely benchmarked finding:
   Intrinsics-style network needs either ground-truth albedo/shading pairs or a
   weakly-supervised setup (time-lapse video, multi-illumination photos) that was out of
   scope for this project's time budget.
-- **No fixed dataset was mandated** by the project statement, so the benchmark uses the
-  small set of natural images bundled with `scikit-image` (a person, a cat, a still life,
-  a motorcycle) to cover the requested semantic groups without any dataset download risk;
-  the pipeline runs unchanged on any RGB image via `python src/pipeline.py <path>`.
+- **No fixed dataset was mandated** by the project statement, so the benchmark uses four
+  natural images bundled with `scikit-image` (a person, a cat, a kitchen still life, a
+  motorcycle) covering people/animals/furniture-adjacent/vehicle objects, without any
+  dataset download risk. The pipeline runs unchanged on any RGB image via
+  `python src/pipeline.py <path>`.
 
 ## References
 

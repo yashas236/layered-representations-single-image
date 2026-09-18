@@ -16,7 +16,8 @@ from torchvision.models.segmentation import deeplabv3_resnet50, DeepLabV3_ResNet
 GROUP_KEYWORDS = {
     "people": {"person"},
     "animals": {"bird", "cat", "dog", "horse", "sheep", "cow", "elephant", "bear", "zebra", "giraffe"},
-    "vehicles": {"bicycle", "car", "motorcycle", "airplane", "bus", "train", "truck", "boat"},
+    # "motorbike" is VOC's spelling (DeepLabV3), "motorcycle" is COCO's (Mask R-CNN).
+    "vehicles": {"bicycle", "car", "motorcycle", "motorbike", "airplane", "aeroplane", "bus", "train", "truck", "boat"},
     "furniture": {"chair", "couch", "bed", "dining table", "toilet", "bench"},
 }
 

@@ -1,0 +1,98 @@
+[
+  {
+    "image": "astronaut",
+    "backend": "instance_maskrcnn",
+    "n_layers": 2,
+    "groups": [
+      "people",
+      "background"
+    ],
+    "classes": [
+      "person",
+      "background"
+    ],
+    "psnr": Infinity,
+    "ssim": 1.0
+  },
+  {
+    "image": "astronaut",
+    "backend": "semantic_deeplabv3",
+    "n_layers": 2,
+    "groups": [
+      "people",
+      "background"
+    ],
+    "classes": [
+      "person",
+      "background"
+    ],
+    "psnr": Infinity,
+    "ssim": 1.0
+  },
+  {
+    "image": "chelsea",
+    "backend": "instance_maskrcnn",
+    "n_layers": 2,
+    "groups": [
+      "animals",
+      "background"
+    ],
+    "classes": [
+      "cat",
+      "background"
+    ],
+    "psnr": Infinity,
+    "ssim": 1.0
+  },
+  {
+    "image": "chelsea",
+    "backend": "semantic_deeplabv3",
+    "n_layers": 2,
+    "groups": [
+      "animals",
+      "background"
+    ],
+    "classes": [
+      "cat",
+      "background"
+    ],
+    "psnr": Infinity,
+    "ssim": 1.0
+  },
+  {
+    "image": "coffee",
+    "backend": "instance_maskrcnn",
+    "n_layers": 5,
+    "groups": [
+      "other",
+      "other",
+      "other",
+      "furniture",
+      "background"
+    ],
+    "classes": [
+      "spoon",
+      "spoon",
+      "cup",
+      "dining table",
+      "background"
+    ],
+    "psnr": Infinity,
+    "ssim": 1.0
+  },
+  {
+    "image": "coffee",
+    "backend": "semantic_deeplabv3",
+    "n_layers": 2,
+    "groups": [
+      "other",
+      "background"
+    ],
+    "classes": [
+      "diningtable",
+      "background"
+    ],
+    "psnr": Infinity,
+    "ssim": 1.0
+  }
+]

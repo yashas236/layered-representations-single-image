@@ -2,6 +2,7 @@
 depth ordering -> RGBA layer stack + (optional) per-layer albedo/shading split.
 """
 import os
+import warnings
 
 import numpy as np
 import torch
@@ -30,7 +31,11 @@ def run_on_image(image_rgb_uint8, segmenter, depth_estimator, out_dir, name, do_
     layer_list = build_layers(image_rgb_uint8, instances, disparity)
     recon = composite(layer_list, image_rgb_uint8.shape)
 
-    psnr = peak_signal_noise_ratio(image_rgb_uint8, recon)
+    with warnings.catch_warnings():
+        # A lossless recomposite (MSE=0) makes PSNR divide-by-zero -> inf by design;
+        # that is the expected, correct value here, not a warning-worthy condition.
+        warnings.filterwarnings("ignore", message="divide by zero")
+        psnr = peak_signal_noise_ratio(image_rgb_uint8, recon)
     ssim = structural_similarity(image_rgb_uint8, recon, channel_axis=2)
 
     for i, layer in enumerate(layer_list):
